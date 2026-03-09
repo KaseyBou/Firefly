@@ -1,24 +1,42 @@
 'use server';
 import bcrypt from 'bcrypt';
-import prisma from '@prisma/client';
+import prisma from '../libs/prismadb';
+import { registerSchema } from '../libs/schemas';
 
-export async function registerUser(formData: FormData) {
-  const username = formData.get('username') as string;
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+type RegisterResponse = {
+  success?: boolean;
+  error?: string;
+};
 
-  const hashedPassword = await bcrypt.hash(password, 12);
+export async function registerUser(
+  prevState: any,
+  formData: FormData,
+): Promise<RegisterResponse> {
+  const rawData = Object.fromEntries(formData.entries());
+
+  // 1. Zod handles the "Is this valid?" check
+  const validatedFields = registerSchema.safeParse(rawData);
+
+  if (!validatedFields.success) {
+    const firstErrorMessage = validatedFields.error.issues[0]?.message;
+    return { error: firstErrorMessage || 'Invalid input data' };
+  }
+
+  const { username, email, password } = validatedFields.data;
 
   try {
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        hashedPassword,
-      },
+    // 2. Prisma handles the "Does this exist?" check
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) return { error: 'Email already in use.' };
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await prisma.user.create({
+      data: { username, email, hashedPassword },
     });
+
     return { success: true };
-  } catch (error) {
-    return { error: 'Username or Email already exists.' };
+  } catch (err) {
+    return { error: 'Failed to create account. Please try again.' };
   }
 }
