@@ -1,69 +1,65 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { auth, signOut } from '@/auth';
+import NavLinks from './NavLinks';
 
-export default function Header() {
-  const pathname = usePathname();
+export default async function Header() {
+  const session = await auth();
+  const displayName = session?.user?.username || 'Explorer';
 
   return (
-    <header className='p-4 border-b border-gray-200'>
-      <nav className='flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
+    <header className='sticky top-0 z-50 w-full bg-[#1a1c1e] text-white border-b border-gray-800 shadow-md'>
+      <nav className='flex items-center justify-between max-w-7xl mx-auto p-4 px-6'>
+        {/* Logo */}
+        <Link
+          href='/'
+          className='flex items-center gap-3 hover:opacity-80 transition-opacity'
+        >
           <Image
             src='/FireFly-logo.png'
-            alt='Firefly Logo'
-            width={45}
-            height={45}
+            alt='Logo'
+            width={40}
+            height={40}
             className='rounded-full'
             priority
           />
-          <h1 className='text-2xl font-bold'>Firefly</h1>
-        </div>
-        <div className='flex gap-4'>
-          <Link
-            href='/'
-            className={`transition-colors ${
-              pathname === '/' ? 'text-[#B7BA64]' : 'hover:text-[#B7BA64]'
-            }`}
-          >
-            Home
-          </Link>
-          <Link
-            href='/about'
-            className={`transition-colors ${
-              pathname === '/about' ? 'text-[#B7BA64]' : 'hover:text-[#B7BA64]'
-            }`}
-          >
-            About
-          </Link>
-          <Link
-            href='/species'
-            className={`transition-colors ${
-              pathname === '/species'
-                ? 'text-[#B7BA64]'
-                : 'hover:text-[#B7BA64]'
-            }`}
-          >
-            Species
-          </Link>
-          <Link
-            href='/signup'
-            className={`transition-colors ${
-              pathname === '/signup' ? 'text-[#B7BA64]' : 'hover:text-[#B7BA64]'
-            }`}
-          >
-            Sign Up
-          </Link>
-          <Link
-            href='/login'
-            className={`transition-colors ${
-              pathname === '/login' ? 'text-[#B7BA64]' : 'hover:text-[#B7BA64]'
-            }`}
-          >
-            Login
-          </Link>
+          <span className='text-2xl font-bold tracking-tight'>Firefly</span>
+        </Link>
+
+        {/* Unified Navigation Area */}
+        <div className='flex items-center gap-8'>
+          <NavLinks isLoggedIn={!!session} username={displayName} />
+
+          <div className='flex items-center gap-8'>
+            {session ? (
+              <form
+                action={async () => {
+                  'use server';
+                  // FIXED: Now explicitly redirects to Home page on logout
+                  await signOut({ redirectTo: '/' });
+                }}
+              >
+                <button className='text-sm font-medium text-gray-400 hover:text-red-400 transition-colors'>
+                  Logout
+                </button>
+              </form>
+            ) : (
+              <div className='flex items-center gap-8'>
+                <Link
+                  href='/login'
+                  className='text-sm font-medium text-gray-300 hover:text-[#B7BA64] transition-colors'
+                >
+                  Login
+                </Link>
+                <Link
+                  href='/signup'
+                  className='text-sm font-medium text-gray-300 hover:text-[#B7BA64] transition-colors'
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
     </header>
