@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { auth, signOut } from '@/auth';
+import { auth } from '@/auth'; // Use the server-side auth
 import NavLinks from './NavLinks';
+import LogoutButton from './LogoutButton'; // Import your new button
 
 export default async function Header() {
   const session = await auth();
@@ -26,23 +27,12 @@ export default async function Header() {
           <span className='text-2xl font-bold tracking-tight'>Firefly</span>
         </Link>
 
-        {/* Unified Navigation Area */}
         <div className='flex items-center gap-8'>
           <NavLinks isLoggedIn={!!session} username={displayName} />
 
           <div className='flex items-center gap-8'>
             {session ? (
-              <form
-                action={async () => {
-                  'use server';
-                  // FIXED: Now explicitly redirects to Home page on logout
-                  await signOut({ redirectTo: '/' });
-                }}
-              >
-                <button className='text-sm font-medium text-gray-400 hover:text-red-400 transition-colors'>
-                  Logout
-                </button>
-              </form>
+              <LogoutButton />
             ) : (
               <div className='flex items-center gap-8'>
                 <Link

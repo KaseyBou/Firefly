@@ -27,21 +27,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isCorrect = await bcrypt.compare(password, user.hashedPassword);
         if (!isCorrect) return null;
 
-        return user; // Prisma returns the 'username' here
+        // Return the user object (Prisma includes the 'id' here by default)
+        return user;
       },
     }),
   ],
   callbacks: {
-    // This moves the username from the DB user into the secure JWT token
     async jwt({ token, user }) {
       if (user) {
+        token.sub = user.id; // Store the database ID in the token
         token.username = (user as any).username;
       }
       return token;
     },
-    // This moves the username from the token into the Session object the Header sees
     async session({ session, token }) {
-      if (token?.username) {
+      if (session.user) {
+        session.user.id = token.sub as string; // Pass the ID to the session object
         session.user.username = token.username as string;
       }
       return session;

@@ -4,7 +4,7 @@ import { TSpecies } from './types';
  * Fetch a Wikipedia summary using either a wikipedia_url or a scientific name.
  */
 export async function fetchWikipediaSummary(
-  wikiUrlOrName: string
+  wikiUrlOrName: string,
 ): Promise<string | undefined> {
   try {
     const maybeTitle =
@@ -14,7 +14,7 @@ export async function fetchWikipediaSummary(
     if (!maybeTitle) return undefined;
     const title = encodeURIComponent(maybeTitle);
     const res = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${title}`
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${title}`,
     );
     if (!res.ok) return undefined;
     const data = await res.json();
@@ -29,14 +29,14 @@ export async function fetchWikipediaSummary(
  * Fetch IUCN status by scientific name.
  */
 export async function fetchIUCNStatus(
-  scientificName: string
+  scientificName: string,
 ): Promise<string | undefined> {
   try {
     const apiKey = process.env.NEXT_PUBLIC_IUCN_API_KEY;
     if (!apiKey) return undefined;
     const encoded = encodeURIComponent(scientificName);
     const res = await fetch(
-      `https://apiv3.iucnredlist.org/api/v3/species/${encoded}?token=${apiKey}`
+      `https://apiv3.iucnredlist.org/api/v3/species/${encoded}?token=${apiKey}`,
     );
     if (!res.ok) return undefined;
     const data = await res.json();
@@ -90,7 +90,7 @@ export async function fetchSpeciesHybrid({
  * Fetch establishment status using iNaturalist taxa endpoint.
  */
 export async function fetchEstablishmentStatus(
-  taxonId: number
+  taxonId: number,
 ): Promise<string> {
   try {
     const res = await fetch(`https://api.inaturalist.org/v1/taxa/${taxonId}`);
@@ -115,3 +115,67 @@ export async function fetchEstablishmentStatus(
     return 'Unknown';
   }
 }
+
+/**
+ * Normalizes species names for comparison
+ * (e.g., "White-Tailed Deer" -> "whitetaileddeer")
+ */
+export const normalizeName = (name: string) => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+};
+
+/**
+ * Calculates the start date based on the user's selected time filter
+ */
+export const getStartDate = (filter: string) => {
+  const now = new Date();
+  switch (filter) {
+    case '24h':
+      return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    case 'week':
+      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    case 'month':
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    default:
+      return null; // For 'all'
+  }
+};
+
+/**
+ * The actual rough shape of CT for visual and logic accuracy.
+ * This is a simplified polygon of the state's borders.
+ */
+export const CT_POLYGON: [number, number][] = [
+  [42.05, -73.48],
+  [42.05, -71.79],
+  [41.95, -71.79],
+  [41.25, -71.85],
+  [41.2, -73.0],
+  [41.0, -73.65],
+  [41.15, -73.72],
+  [42.05, -73.48],
+];
+
+/**
+ * High-precision check to see if a point is inside the CT Polygon.
+ * Uses the ray-casting algorithm.
+ */
+export const isInsideCT = (lat: number, lng: number) => {
+  let isInside = false;
+  // Iterate through each edge of the polygon
+  for (let i = 0, j = CT_POLYGON.length - 1; i < CT_POLYGON.length; j = i++) {
+    const [latI, lngI] = CT_POLYGON[i];
+    const [latJ, lngJ] = CT_POLYGON[j];
+
+    // Check if the ray from the point intersects with the edge
+    const intersect =
+      lngI > lng !== lngJ > lng &&
+      lat < ((latJ - latI) * (lng - lngI)) / (lngJ - lngI) + latI;
+
+    if (intersect) isInside = !isInside;
+  }
+  return isInside;
+};

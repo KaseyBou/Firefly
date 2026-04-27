@@ -23,3 +23,10 @@ export const registerSchema = z
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
+
+export const observationSchema = z.object({
+  speciesName: z.string().min(2, 'Species name is required'),
+  description: z.string().min(5, 'Please provide a brief description'),
+  latitude: z.number(),
+  longitude: z.number(),
+});

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
+import { useSession } from 'next-auth/react';
 import SpeciesCard from './SpeciesCard';
 import SpeciesModal from './SpeciesModal';
 import { fetchSpeciesHybrid } from '../libs/helperFunctions';
@@ -21,11 +22,12 @@ export default function SpeciesGridClient({
   initialSpecies = [],
   initialFilter = '',
 }: SpeciesGridClientProps) {
+  // FIX: Destructure both session data and status
+  const { data: session, status } = useSession();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(initialFilter);
   const [selectedSpecies, setSelectedSpecies] = useState<TSpecies | null>(null);
 
-  // All taxa
   const taxaForAllAnimals = useMemo(
     () => [
       IconicTaxa.Mammalia,
@@ -35,21 +37,19 @@ export default function SpeciesGridClient({
       IconicTaxa.Actinopterygii,
       IconicTaxa.Insecta,
     ],
-    []
+    [],
   );
 
-  // Selected taxa based on filter
   const selectedTaxa = useMemo(() => {
     if (!filter) return taxaForAllAnimals;
     const entry = Object.entries(TAXA_LABELS).find(
-      ([, label]) => label === filter
+      ([, label]) => label === filter,
     );
     if (!entry) return taxaForAllAnimals;
     const key = entry[0] as keyof typeof IconicTaxa;
     return [IconicTaxa[key]];
   }, [filter, taxaForAllAnimals]);
 
-  // Infinite query for species
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery<TSpecies[], Error>({
       queryKey: ['inaturalist-species', selectedTaxa.join(','), filter],
@@ -69,11 +69,9 @@ export default function SpeciesGridClient({
       staleTime: Infinity,
     });
 
-  // Flatten pages
   const speciesData: TSpecies[] =
     data?.pages.flatMap((p) => p) ?? initialSpecies;
 
-  // Filter client-side: search + whitelist (skip whitelist for Insects)
   const filteredSpecies = speciesData.filter((s) => {
     const name = (
       s.taxon.preferred_common_name ||
@@ -81,20 +79,15 @@ export default function SpeciesGridClient({
       ''
     ).toLowerCase();
     const matchesSearch = name.includes(search.toLowerCase());
-
-    // If filter is Insects, skip whitelist check
     if (filter === TAXA_LABELS.Insecta) return matchesSearch;
 
     const isNative = CONNECTICUT_NATIVE_SPECIES_SET.has(
-      s.taxon.name?.toLowerCase() || ''
+      s.taxon.name?.toLowerCase() || '',
     );
     return matchesSearch && isNative;
   });
 
-  // Infinite scroll observer
-  const { ref, inView } = useInView({
-    threshold: 0.5,
-  });
+  const { ref, inView } = useInView({ threshold: 0.5 });
 
   if (inView && hasNextPage && !isFetchingNextPage) {
     fetchNextPage();
@@ -102,7 +95,6 @@ export default function SpeciesGridClient({
 
   return (
     <div>
-      {/* Search + Filter: always render immediately */}
       <div className='flex gap-4 mb-6'>
         <input
           type='text'
@@ -125,7 +117,6 @@ export default function SpeciesGridClient({
         </select>
       </div>
 
-      {/* Species grid */}
       {isLoading && !speciesData.length ? (
         <p>Loading ...</p>
       ) : !filteredSpecies.length ? (
@@ -142,14 +133,13 @@ export default function SpeciesGridClient({
         </ul>
       )}
 
-      {/* Infinite scroll loading */}
       <div ref={ref} className='text-center mt-6'>
         {isFetchingNextPage && <p>Loading ...</p>}
       </div>
 
-      {/* Modal */}
       {selectedSpecies && (
         <SpeciesModal
+          key={`modal-${selectedSpecies.taxon.id}`}
           species={selectedSpecies}
           onClose={() => setSelectedSpecies(null)}
         />
