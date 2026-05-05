@@ -2,7 +2,8 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import dynamic from 'next/dynamic'; // Import dynamic
+import dynamic from 'next/dynamic';
+// @ts-ignore
 import 'leaflet/dist/leaflet.css';
 import { getObservations } from '../actions/observations';
 
@@ -31,7 +32,6 @@ function MapContent() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [customIcon, setCustomIcon] = useState<any>(null);
 
-  // 2. Initialize Leaflet Icon only on the client side
   useEffect(() => {
     import('leaflet').then((L) => {
       setCustomIcon(
@@ -51,16 +51,15 @@ function MapContent() {
     });
   }, [speciesQuery, filter]);
 
-  // Prevent rendering the map until the icon is ready (client-side)
   if (!customIcon)
     return (
-      <div className='h-screen bg-black flex items-center justify-center text-[#C8FF00]'>
+      <div className='h-[calc(100vh-73px)] bg-black flex items-center justify-center text-[#C8FF00]'>
         Initializing Map Environment...
       </div>
     );
 
   return (
-    <div className='relative h-[90vh] w-full bg-black'>
+    <div className='relative h-[calc(100vh-73px)] w-full bg-black overflow-hidden'>
       {/* FULL SCREEN MODAL */}
       {selectedImage && (
         <div
@@ -79,8 +78,9 @@ function MapContent() {
       )}
 
       {/* FILTERS & INDICATORS */}
-      <div className='absolute top-6 right-6 z-[1000] flex flex-col items-end gap-3'>
-        <div className='flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl shadow-2xl'>
+      {/* z-index lowered slightly to ensure it stays below the Header's z-50/60 */}
+      <div className='absolute top-6 right-6 z-[40] flex flex-col items-end gap-3'>
+        <div className='flex bg-zinc-900/90 backdrop-blur border border-zinc-800 p-1 rounded-xl shadow-2xl'>
           {['24h', 'week', 'month', 'all'].map((t) => (
             <button
               key={t}
@@ -109,43 +109,45 @@ function MapContent() {
         )}
       </div>
 
-      <MapContainer
-        center={[41.6, -72.7]}
-        zoom={9}
-        style={{ height: '100%', width: '100%' }}
-      >
-        <TileLayer url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' />
-        {obs.map((o) => (
-          <Marker
-            key={o.id}
-            position={[o.latitude, o.longitude]}
-            icon={customIcon}
-          >
-            <Popup>
-              <div className='p-1 text-black min-w-[160px] flex flex-col gap-2'>
-                {o.imageUrl && (
-                  <img
-                    src={o.imageUrl}
-                    className='w-full h-28 object-cover rounded-md cursor-pointer'
-                    onClick={() => setSelectedImage(o.imageUrl)}
-                    alt={o.speciesName}
-                  />
-                )}
-                <p className='font-bold text-sm uppercase leading-tight'>
-                  {o.speciesName}
-                </p>
-                <p className='text-xs italic text-zinc-600 leading-snug'>
-                  "{o.description}"
-                </p>
-                <div className='border-t pt-2 mt-1 flex justify-between text-[10px] text-zinc-400'>
-                  <span>@{o.user.username}</span>
-                  <span>{new Date(o.spottedAt).toLocaleDateString()}</span>
+      <div className='relative h-full w-full z-10'>
+        <MapContainer
+          center={[41.6, -72.7]}
+          zoom={9}
+          style={{ height: '100%', width: '100%' }}
+        >
+          <TileLayer url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' />
+          {obs.map((o) => (
+            <Marker
+              key={o.id}
+              position={[o.latitude, o.longitude]}
+              icon={customIcon}
+            >
+              <Popup>
+                <div className='p-1 text-black min-w-[160px] flex flex-col gap-2'>
+                  {o.imageUrl && (
+                    <img
+                      src={o.imageUrl}
+                      className='w-full h-28 object-cover rounded-md cursor-pointer'
+                      onClick={() => setSelectedImage(o.imageUrl)}
+                      alt={o.speciesName}
+                    />
+                  )}
+                  <p className='font-bold text-sm uppercase leading-tight'>
+                    {o.speciesName}
+                  </p>
+                  <p className='text-xs italic text-zinc-600 leading-snug'>
+                    "{o.description}"
+                  </p>
+                  <div className='border-t pt-2 mt-1 flex justify-between text-[10px] text-zinc-400'>
+                    <span>@{o.user.username}</span>
+                    <span>{new Date(o.spottedAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
     </div>
   );
 }

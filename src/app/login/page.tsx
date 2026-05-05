@@ -60,7 +60,7 @@ export default function LoginPage() {
               name='email'
               type='email'
               required
-              placeholder='kasey@example.com'
+              placeholder='JohnDoe@example.com'
               className='w-full p-3 rounded bg-black border border-gray-800 focus:border-[#B7BA64] outline-none text-white transition-all'
             />
           </div>

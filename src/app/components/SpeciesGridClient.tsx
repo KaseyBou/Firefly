@@ -93,18 +93,23 @@ export default function SpeciesGridClient({
     fetchNextPage();
   }
 
+  // Inside SpeciesGridClient.tsx return statement:
   return (
-    <div>
-      <div className='flex gap-4 mb-6'>
-        <input
-          type='text'
-          placeholder='Search species...'
-          className='p-2 rounded text-black bg-white flex-1'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+    <div className='space-y-8'>
+      {/* SEARCH & FILTER BAR */}
+      <div className='flex flex-col md:flex-row gap-4'>
+        <div className='relative flex-1'>
+          <input
+            type='text'
+            placeholder='Search species...'
+            className='w-full p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00] focus:ring-1 focus:ring-[#C8FF00] transition-all'
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
         <select
-          className='p-2 rounded text-black bg-white'
+          className='p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white focus:outline-none focus:border-[#C8FF00] appearance-none cursor-pointer md:w-64'
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
@@ -118,11 +123,18 @@ export default function SpeciesGridClient({
       </div>
 
       {isLoading && !speciesData.length ? (
-        <p>Loading ...</p>
+        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-pulse'>
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className='h-64 bg-zinc-900 rounded-2xl' />
+          ))}
+        </div>
       ) : !filteredSpecies.length ? (
-        <p>No species found.</p>
+        <div className='py-20 text-center border border-dashed border-zinc-800 rounded-3xl'>
+          <p className='text-zinc-500'>No creatures found in this category.</p>
+        </div>
       ) : (
-        <ul className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+        /* THE GRID */
+        <ul className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8'>
           {filteredSpecies.map((s) => (
             <SpeciesCard
               key={s.taxon.id}
@@ -133,8 +145,13 @@ export default function SpeciesGridClient({
         </ul>
       )}
 
-      <div ref={ref} className='text-center mt-6'>
-        {isFetchingNextPage && <p>Loading ...</p>}
+      <div ref={ref} className='py-12 flex justify-center'>
+        {isFetchingNextPage && (
+          <div className='flex gap-2 items-center text-[#C8FF00] font-bold uppercase tracking-widest text-xs'>
+            <span className='w-2 h-2 bg-[#C8FF00] rounded-full animate-bounce' />
+            Scanning more species...
+          </div>
+        )}
       </div>
 
       {selectedSpecies && (

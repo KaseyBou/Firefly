@@ -14,9 +14,11 @@ export default function SpeciesCard({ species, onClick }: SpeciesCardProps) {
   const common = taxon.preferred_common_name;
   const sci = taxon.name;
   const image = taxon.default_photo?.medium_url || '/placeholder.jpg';
+
+  // Logic for the conservation status badge
   const statusName = taxon.conservation_status?.status_name ?? 'Unknown';
-  const statusColor =
-    statusName && statusName !== 'Unknown' ? 'text-red-400' : 'text-gray-400';
+  const isThreatened =
+    statusName !== 'Unknown' && statusName !== 'Least Concern';
 
   return (
     <Card
@@ -25,9 +27,18 @@ export default function SpeciesCard({ species, onClick }: SpeciesCardProps) {
       subtitle={common ? sci : undefined}
       onClick={onClick}
     >
-      <p className={`text-sm mt-1 ${statusColor}`}>
-        Conservation Status: {statusName}
-      </p>
+      <div className='mt-3 flex items-center gap-2'>
+        {/* Modern Badge Style */}
+        <span
+          className={`text-[10px] uppercase font-black px-2 py-1 rounded-md tracking-wider ${
+            isThreatened
+              ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+              : 'bg-zinc-800 text-zinc-400 border border-zinc-700/50'
+          }`}
+        >
+          {statusName}
+        </span>
+      </div>
     </Card>
   );
 }

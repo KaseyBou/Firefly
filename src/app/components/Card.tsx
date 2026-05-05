@@ -19,19 +19,30 @@ export default function Card({
 }: CardProps) {
   return (
     <li
-      className={`bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-[#B7BA64] transition-colors cursor-pointer ${className}`}
+      className={`group bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden hover:border-[#C8FF00]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer list-none ${className}`}
       onClick={onClick}
     >
-      {imageSrc && (
+      <div className='relative aspect-[4/3] overflow-hidden'>
         <img
           src={imageSrc}
           alt={title}
-          className='w-full h-40 object-cover rounded-md mb-3'
+          className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110'
         />
-      )}
-      <h2 className='text-lg font-semibold'>{title}</h2>
-      {subtitle && <p className='text-sm italic'>{subtitle}</p>}
-      {children}
+        {/* Subtle overlay gradient */}
+        <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity' />
+      </div>
+
+      <div className='p-4'>
+        <h2 className='text-base md:text-lg font-bold truncate group-hover:text-[#C8FF00] transition-colors'>
+          {title}
+        </h2>
+        {subtitle && (
+          <p className='text-xs italic text-zinc-500 truncate mb-2'>
+            {subtitle}
+          </p>
+        )}
+        {children}
+      </div>
     </li>
   );
 }

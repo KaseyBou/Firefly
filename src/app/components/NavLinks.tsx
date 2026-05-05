@@ -6,22 +6,32 @@ import { usePathname } from 'next/navigation';
 export default function NavLinks({
   isLoggedIn,
   username,
+  className = '',
 }: {
   isLoggedIn: boolean;
   username?: string;
+  className?: string;
 }) {
   const pathname = usePathname();
+
+  // Use the firefly lime green for active states
   const activeStyle = (path: string) =>
-    `transition-colors ${pathname === path ? 'text-[#B7BA64]' : 'text-gray-300 hover:text-[#B7BA64]'}`;
+    `transition-colors whitespace-nowrap ${
+      pathname === path
+        ? 'text-[#C8FF00]'
+        : 'text-gray-300 hover:text-[#C8FF00]'
+    }`;
 
   return (
-    <div className='flex gap-8 items-center text-sm font-medium'>
-      {/* 1. Hi, [username] sits at the very beginning of the list */}
+    <div className={`items-center font-medium ${className}`}>
+      {/* 1. Greeting: Only for logged-in users */}
       {isLoggedIn && (
-        <span className='font-bold text-[#C8FF00]'>Hi, {username}</span>
+        <span className='font-black text-[#C8FF00] mb-2 md:mb-0'>
+          Hi, {username}
+        </span>
       )}
 
-      {/* 2. Marketing links only show when logged out */}
+      {/* 2. Marketing Links: Only for logged-out users */}
       {!isLoggedIn && (
         <>
           <Link href='/' className={activeStyle('/')}>
@@ -33,12 +43,12 @@ export default function NavLinks({
         </>
       )}
 
-      {/* 3. Species link follows the greeting (when logged in) or About (when logged out) */}
+      {/* 3. Universal Link */}
       <Link href='/species' className={activeStyle('/species')}>
         Species
       </Link>
 
-      {/* 4. Protected links */}
+      {/* 4. Protected Links: Only for logged-in users */}
       {isLoggedIn && (
         <>
           <Link href='/map' className={activeStyle('/map')}>

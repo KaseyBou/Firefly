@@ -199,7 +199,7 @@ export default function UploadPage() {
                 }}
                 className={`p-4 rounded-xl border border-zinc-800 text-zinc-400 text-xs font-bold hover:bg-zinc-900 transition-all ${isLocating && 'animate-pulse'}`}
               >
-                {isLocating ? 'Locating...' : 'Use GPS 📍'}
+                {isLocating ? 'Locating...' : 'Mark my location 📍'}
               </button>
             </div>
 
