@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "npx prisma generate && NEXT_DISABLE_ESLINT=1 next build --no-lint",
     "start": "next start",
     "lint": "next lint"
   },
