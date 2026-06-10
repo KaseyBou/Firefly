@@ -60,6 +60,7 @@ export default function LoginPage() {
               name='email'
               type='email'
               required
+              defaultValue='JohnDoe@example.com'
               placeholder='JohnDoe@example.com'
               className='w-full p-3 rounded bg-black border border-gray-800 focus:border-[#B7BA64] outline-none text-white transition-all'
             />
@@ -73,6 +74,7 @@ export default function LoginPage() {
               name='password'
               type='password'
               required
+              defaultValue='John809!'t
               placeholder='••••••••'
               className='w-full p-3 rounded bg-black border border-gray-800 focus:border-[#B7BA64] outline-none text-white transition-all'
             />

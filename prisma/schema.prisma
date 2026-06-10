@@ -5,8 +5,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 model User {
@@ -20,14 +21,13 @@ model User {
 
 model Observation {
   id           String   @id @default(cuid())
-  speciesName  String   // What they found
-  description  String   // User's notes
-  imageUrl     String   // We will store the URL string here
+  speciesName  String   
+  description  String   @db.Text  // <-- Added @db.Text here
+  imageUrl     String   @db.Text  // <-- Added @db.Text here
   latitude     Float
   longitude    Float
   spottedAt    DateTime @default(now())
   
-  // Link to the user who uploaded it
   userId       String
   user         User     @relation(fields: [userId], references: [id])
 }
