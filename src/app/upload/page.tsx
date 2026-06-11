@@ -2,43 +2,21 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  MapContainer,
-  TileLayer,
-  useMapEvents,
-  Marker,
-  Polygon,
-} from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import dynamic from 'next/dynamic';
 import { createObservation } from '../actions/observations';
 import { UploadButton } from '@/app/libs/uploadthing';
-import { isInsideCT, CT_POLYGON } from '../libs/helperFunctions';
+import { isInsideCT } from '../libs/helperFunctions';
 import '@uploadthing/react/styles.css';
 
-// Fix for default Leaflet marker icons
-const icon = new L.Icon({
-  iconUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+// Lazy-load the map component: skips compiling this on the headless server entirely
+const UploadMap = dynamic(() => import('./UploadMap'), {
+  ssr: false,
+  loading: () => (
+    <div className='h-72 w-full bg-zinc-950 border border-zinc-900 rounded-xl animate-pulse flex items-center justify-center text-zinc-500 text-xs font-mono tracking-wider'>
+      INITIALIZING RADAR SYSTEM...
+    </div>
+  ),
 });
-
-/**
- * Capture click/tap events on the map
- */
-function LocationPicker({
-  onPick,
-}: {
-  onPick: (lat: number, lng: number) => void;
-}) {
-  useMapEvents({
-    click(e) {
-      onPick(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-}
 
 export default function UploadPage() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
@@ -142,7 +120,6 @@ export default function UploadPage() {
               <div className='relative group'>
                 <img
                   src={imageUrl}
-                  // Added shadow-2xl and a slight border for depth
                   className='h-44 w-full object-cover rounded-lg mb-2 shadow-2xl border border-zinc-800'
                   alt='Preview'
                 />
@@ -204,34 +181,7 @@ export default function UploadPage() {
             </div>
 
             {isMapPicking && (
-              <div className='h-72 w-full rounded-xl overflow-hidden border border-zinc-800 relative shadow-inner'>
-                <MapContainer
-                  center={[41.6, -72.7]}
-                  zoom={8}
-                  style={{ height: '100%', width: '100%' }}
-                >
-                  <TileLayer url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' />
-                  <Polygon
-                    positions={CT_POLYGON}
-                    pathOptions={{
-                      color: '#C8FF00',
-                      fillOpacity: 0.05,
-                      weight: 2,
-                      dashArray: '5, 10',
-                    }}
-                  />
-                  <LocationPicker onPick={handleMapPick} />
-                  {location && (
-                    <Marker
-                      position={[location.lat, location.lng]}
-                      icon={icon}
-                    />
-                  )}
-                </MapContainer>
-                <div className='absolute bottom-3 left-3 z-[1000] bg-black/70 backdrop-blur-md border border-zinc-800 px-3 py-1.5 rounded-lg text-[10px] text-[#C8FF00] font-medium'>
-                  Tap within the dashed lines to pin location
-                </div>
-              </div>
+              <UploadMap location={location} handleMapPick={handleMapPick} />
             )}
           </div>
 
